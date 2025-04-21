@@ -191,7 +191,8 @@ print(f"Input:{np.array([1, 1])}, Predicted: {predict_matrix(np.array([1, 1]), w
 
 <H3>Output:</H3>
 
-Show your results here
+![image](https://github.com/user-attachments/assets/b926c58e-4cb1-4061-8d97-e835e7403cf0)
+
 
 <H3>Result:</H3>
 Thus, MLP is implemented for multi-classification using python.
