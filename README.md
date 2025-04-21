@@ -117,82 +117,68 @@ Normalize our dataset.
 <H3>Program:</H3> 
 
 ```
-import numpy as np
-import matplotlib.pyplot as plt
+import pandas as pd
+import sklearn
+from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import classification_report, confusion_matrix
 
-def gaussian_rbf(x, landmark, gamma=1):
-    return np.exp(-gamma * np.linalg.norm(x - landmark)**2)
+# Load the Iris dataset from UCI repository
+url = 'https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'
+names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width', 'Class']
+irisdata = pd.read_csv(url, names=names)
 
-def end_to_end(X1, X2, ys, mu1, mu2):
-    from_1 = [gaussian_rbf(np.array([X1[i], X2[i]]), mu1) for i in range(len(X1))]
-    from_2 = [gaussian_rbf(np.array([X1[i], X2[i]]), mu2) for i in range(len(X1))]
+# Prepare features (X) and labels (y)
+X = irisdata.iloc[:, 0:4]
+y = irisdata.select_dtypes(include=[object])
 
-    plt.figure(figsize=(13, 5))
+# Display sample data
+print("Features (first 5 rows):")
+print(X.head())
+print("\nLabels (first 5 rows):")
+print(y.head())
 
-    plt.subplot(1, 2, 1)
-    plt.scatter((X1[0], X1[3]), (X2[0], X2[3]), label="Class_0")
-    plt.scatter((X1[1], X1[2]), (X2[1], X2[2]), label="Class_1")
-    plt.xlabel("$X1$", fontsize=15)
-    plt.ylabel("$X2$", fontsize=15)
-    plt.title("Xor: Linearly Inseparable", fontsize=15)
-    plt.legend()
+# Show unique classes
+print("\nUnique classes in the dataset:")
+print(y.Class.unique())
 
-    plt.subplot(1, 2, 2)
-    plt.scatter(from_1[0], from_2[0], label="Class_0")
-    plt.scatter(from_1[1], from_2[1], label="Class_1")
-    plt.scatter(from_1[2], from_2[2], label="Class_1")
-    plt.scatter(from_1[3], from_2[3], label="Class_0")
-    plt.plot([0, 0.95], [0.95, 0], "k--")
-    plt.annotate("Seperating hyperplane", xy=(0.4, 0.55), xytext=(0.55, 0.66),
-                arrowprops=dict(facecolor='black', shrink=0.05))
-    plt.xlabel(f"$mu1$: {(mu1)}", fontsize=15)
-    plt.ylabel(f"$mu2$: {(mu2)}", fontsize=15)
-    plt.title("Transformed Inputs: Linearly Seperable", fontsize=15)
-    plt.legend()
+# Convert categorical labels to numerical values
+le = preprocessing.LabelEncoder()
+y = y.apply(le.fit_transform)
+print("\nEncoded labels (first 5 rows):")
+print(y.head())
 
-    A = []
-    for i, j in zip(from_1, from_2):
-        temp = []
-        temp.append(i)
-        temp.append(j)
-        temp.append(1)
-        A.append(temp)
+# Split data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
 
-    A = np.array(A)
-    W = np.linalg.inv(A.T.dot(A)).dot(A.T).dot(ys)
-    print(np.round(A.dot(W)))
-    print(ys)
-    print(f"Weights: {W}")
-    return W
+# Standardize features
+scaler = StandardScaler()
+scaler.fit(X_train)
+X_train = scaler.transform(X_train)
+X_test = scaler.transform(X_test)
 
-def predict_matrix(point, weights):
-    gaussian_rbf_0 = gaussian_rbf(point, mu1)
-    gaussian_rbf_1 = gaussian_rbf(point, mu2)
-    A = np.array([gaussian_rbf_0, gaussian_rbf_1, 1])
-    return np.round(A.dot(weights))
+# Create and train Multi-layer Perceptron classifier
+mlp = MLPClassifier(hidden_layer_sizes=(10, 10, 10), max_iter=1000)
+mlp.fit(X_train, y_train.values.ravel())
 
-# points
-x1 = np.array([0, 0, 1, 1])
-x2 = np.array([0, 1, 0, 1])
-ys = np.array([0, 1, 1, 0])
+# Make predictions
+predictions = mlp.predict(X_test)
+print("\nModel predictions:")
+print(predictions)
 
-# centers
-mu1 = np.array([0, 1])
-mu2 = np.array([1, 0])
-
-w = end_to_end(x1, x2, ys, mu1, mu2)
-
-# testing
-print(f"Input:{np.array([0, 0])}, Predicted: {predict_matrix(np.array([0, 0]), w)}")
-print(f"Input:{np.array([0, 1])}, Predicted: {predict_matrix(np.array([0, 1]), w)}")
-print(f"Input:{np.array([1, 0])}, Predicted: {predict_matrix(np.array([1, 0]), w)}")
-print(f"Input:{np.array([1, 1])}, Predicted: {predict_matrix(np.array([1, 1]), w)}")
+# Evaluate model performance
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, predictions))
+print("\nClassification Report:")
+print(classification_report(y_test, predictions))
 ```
 
 <H3>Output:</H3>
 
-![image](https://github.com/user-attachments/assets/b926c58e-4cb1-4061-8d97-e835e7403cf0)
-![image](https://github.com/user-attachments/assets/e69f7e76-27d9-4fb7-b723-911d3912ac6a)
+![image](https://github.com/user-attachments/assets/b85ef21c-7ccc-4cbf-b44c-1d30fb97a877)
+![image](https://github.com/user-attachments/assets/8b1e0128-cb3f-485e-9f02-13f41c7881bd)
 
 
 <H3>Result:</H3>
